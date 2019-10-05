@@ -19,13 +19,14 @@ if (indexOfPageTitle === 1) {
     console.log("No page title found. Appending results to previous page's USES.")
 } else {
     const [firstPage, secondPage] = slicePageIntoTwoPages(page, indexOfPageTitle);
-    // TODO: Get page number from firstPage and prepend it to text of secondPage
     parsePageText(secondPage, title);
 }
 
 function slicePageIntoTwoPages(page, sliceIndex) {
-    const firstPage = fromTextObjectsToPage(page.Texts.slice(0, sliceIndex))
-    const secondPage = fromTextObjectsToPage(page.Texts.slice(sliceIndex))
+    const firstPageTextObjects = page.Texts.slice(0, sliceIndex);
+    const pageNumberTextObject = Object.assign({}, firstPageTextObjects[0]);
+    const firstPage = fromTextObjectsToPage(firstPageTextObjects)
+    const secondPage = fromTextObjectsToPage([pageNumberTextObject, ...page.Texts.slice(sliceIndex)])
     return [firstPage, secondPage];
 }
 
@@ -59,6 +60,7 @@ function parsePageText(page, title) {
 function fromPageToText(page) {
     return page.Texts.map(textObjectToText).join(' ')
 }
+
 function textObjectToText(textObject) {
     return decodeURIComponent(textObject.R[0].T).trim();
 }
