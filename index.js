@@ -30,19 +30,7 @@ for (let i = startPage; i < 11; i++) {
             console.log("No page title found. Appending results to previous page's USES.")
         }
     }
-    console.log('');
-}
-
-function slicePageIntoTwoPages(page, sliceIndex) {
-    const firstPageTextObjects = page.Texts.slice(0, sliceIndex);
-    const pageNumberTextObject = Object.assign({}, firstPageTextObjects[0]);
-    const firstPage = fromTextObjectsToPage(firstPageTextObjects)
-    const secondPage = fromTextObjectsToPage([pageNumberTextObject, ...page.Texts.slice(sliceIndex)])
-    return [firstPage, secondPage];
-}
-
-function fromTextObjectsToPage(textObjects) {
-    return {Texts: textObjects};
+    console.log(''); // print newline
 }
 
 function parsePageText(page, title, sectionTitle) {
@@ -67,6 +55,18 @@ function parsePageText(page, title, sectionTitle) {
     } else {
         console.error('No match found for page.');
     }
+}
+
+function slicePageIntoTwoPages(page, sliceIndex) {
+    const firstPageTextObjects = page.Texts.slice(0, sliceIndex);
+    const pageNumberTextObject = Object.assign({}, firstPageTextObjects[0]);
+    const firstPage = fromTextObjectsToPage(firstPageTextObjects)
+    const secondPage = fromTextObjectsToPage([pageNumberTextObject, ...page.Texts.slice(sliceIndex)])
+    return [firstPage, secondPage];
+}
+
+function fromTextObjectsToPage(textObjects) {
+    return {Texts: textObjects};
 }
 
 function fromPageToText(page) {
@@ -104,7 +104,6 @@ function isTextObjectSectionTitle(textObject) {
 function isTextObjectEqualToStyles(textObject, textObjectStyles) {
     return JSON.stringify(textObject.R[0].TS) === JSON.stringify(textObjectStyles);
 }
-
 
 function correctText(title, text) {
     switch (title) {
