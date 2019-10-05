@@ -1,0 +1,14 @@
+{
+  "name": "wild-edibles-of-missouri",
+  "version": "0.1.0",
+  "description": "Transform Wild Edibles of Missouri PDF to CSV file.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "G Brenden Roques",
+  "license": "MIT",
+  "dependencies": {
+    "pdf2json": "^1.1.8"
+  }
+}
