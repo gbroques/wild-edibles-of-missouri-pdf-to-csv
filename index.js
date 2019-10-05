@@ -1,25 +1,36 @@
 const fs = require('fs');
 
 const wildEdibles = JSON.parse(fs.readFileSync('WildEdibles.json'));
+const pages = wildEdibles.formImage.Pages;
 
-// White flowering edibles start on page 8
-// Chickweed on page 17 is an example of where a new edible starts part-way down a page.
-const startPage = 9 + 8;
-
-const page = wildEdibles.formImage.Pages[startPage];
-
-const indexOfPageTitle = findIndexOfPageTitle(page);
-const pageTitleTextObject = findPageTitleTextObject(page);
-const title = textObjectToText(pageTitleTextObject)
-
-if (indexOfPageTitle === 1) {
-    parsePageText(page, title);
-} else if (indexOfPageTitle === -1) {
-    // Append text to previous page uses
-    console.log("No page title found. Appending results to previous page's USES.")
-} else {
-    const [firstPage, secondPage] = slicePageIntoTwoPages(page, indexOfPageTitle);
-    parsePageText(secondPage, title);
+// White flowering edibles section starts on page 7
+const startPage = 7;
+let currentSection = '';
+for (let i = startPage; i < 11; i++) {
+    const page = pages[i];
+    const sectionTitleTextObjects = filterSectionTitleTextObjects(page);
+    if (sectionTitleTextObjects.length > 0) {
+        currentSection = fromTextObjectsToText(sectionTitleTextObjects);
+        const logMessage = `SECTION: ${currentSection}`;
+        console.log(logMessage);
+        console.log(logMessage.split('').map(() => '=').join(''));
+    } else {
+        const indexOfPageTitle = findIndexOfPageTitleTextObject(page);
+        if (indexOfPageTitle !== -1) {
+            const pageTitleTextObject = findPageTitleTextObject(page);
+            const pageTitleText = fromTextObjectToText(pageTitleTextObject);
+            if (indexOfPageTitle === 1) {
+                parsePageText(page, pageTitleText, currentSection);
+            } else {
+                const [firstPage, secondPage] = slicePageIntoTwoPages(page, indexOfPageTitle);
+                parsePageText(secondPage, pageTitleText, currentSection);
+            }
+        } else {
+            // Append text to previous page uses
+            console.log("No page title found. Appending results to previous page's USES.")
+        }
+    }
+    console.log('');
 }
 
 function slicePageIntoTwoPages(page, sliceIndex) {
@@ -34,20 +45,21 @@ function fromTextObjectsToPage(textObjects) {
     return {Texts: textObjects};
 }
 
-function parsePageText(page, title) {
+function parsePageText(page, title, sectionTitle) {
     const pageText = fromPageToText(page);
     const correctedText = correctText(title, pageText);
+    // TODO: Add support for parsing CAUTION
     const pagePattern = /^([0-9]+) (.*) \((.*)\) FLOWERS: (.*) DESCRIPTION: (.*) HABITAT: (.*) LOCATION: (.*) COLLECTION: (.*) USES: ([A-Z][^[A-Z]*) (.*)$/;
     const matchResult = correctedText.match(pagePattern);
     if (matchResult !== null) {
         const [match, pageNumber, name, scientificName, flowers, description, habitat, location, collection, useCategories, uses] = matchResult;
-        // Page title TS === [0,18.425,1,0]
         console.log('Page Number: ', pageNumber);
         console.log('Name: ', name);
         console.log('Scientific Name: ', scientificName);
         console.log('Flowers: ', flowers);
+        console.log('Section: ', sectionTitle);
         console.log('Description: ', description);
-        console.log('Habitat: ', habitat);
+        console.log('Habitat: ', habitat)
         console.log('Location: ', location);
         console.log('Collection: ', collection);
         console.log('Use Categories: ', useCategories);
@@ -58,10 +70,14 @@ function parsePageText(page, title) {
 }
 
 function fromPageToText(page) {
-    return page.Texts.map(textObjectToText).join(' ')
+    return fromTextObjectsToText(page.Texts);
 }
 
-function textObjectToText(textObject) {
+function fromTextObjectsToText(textObjects) {
+    return textObjects.map(fromTextObjectToText).join(' ');
+}
+
+function fromTextObjectToText(textObject) {
     return decodeURIComponent(textObject.R[0].T).trim();
 }
 
@@ -69,13 +85,26 @@ function findPageTitleTextObject(page) {
     return page.Texts.find(isTextObjectPageTitle);
 }
 
-function findIndexOfPageTitle(page) {
+function filterSectionTitleTextObjects(page) {
+    return page.Texts.filter(isTextObjectSectionTitle);
+}
+
+function findIndexOfPageTitleTextObject(page) {
     return page.Texts.findIndex(isTextObjectPageTitle);
 }
 
 function isTextObjectPageTitle(textObject) {
-    return JSON.stringify(textObject.R[0].TS) === JSON.stringify([0,18.425,1,0]);
+    return isTextObjectEqualToStyles(textObject, [0,18.425,1,0]);
 }
+
+function isTextObjectSectionTitle(textObject) {
+    return isTextObjectEqualToStyles(textObject, [0,22.425,1,1]);
+}
+
+function isTextObjectEqualToStyles(textObject, textObjectStyles) {
+    return JSON.stringify(textObject.R[0].TS) === JSON.stringify(textObjectStyles);
+}
+
 
 function correctText(title, text) {
     switch (title) {
