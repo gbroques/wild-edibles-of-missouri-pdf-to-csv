@@ -1,5 +1,5 @@
 {
-  "name": "wild-edibles-of-missouri",
+  "name": "wild-edibles-of-missouri-pdf-to-csv",
   "version": "0.1.0",
   "description": "Transform Wild Edibles of Missouri PDF to CSV file.",
   "main": "index.js",
