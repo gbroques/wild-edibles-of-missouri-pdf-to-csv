@@ -8,7 +8,7 @@ const pages = wildEdibles.formImage.Pages;
 const startPage = 7;
 let currentSection = '';
 const edibles = [];
-for (let i = startPage; i < 20; i++) {
+for (let i = startPage; i < 22; i++) {
     const page = pages[i];
     const sectionTitleTextObjects = filterSectionTitleTextObjects(page);
     if (sectionTitleTextObjects.length > 0) {
