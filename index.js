@@ -26,19 +26,19 @@ for (let i = startPage; i < 20; i++) {
             } else {
                 const [firstPage, secondPage] = slicePageIntoTwoPages(page, indexOfPageTitle);
                 result = parsePageText(secondPage, pageTitleText, currentSection);
-                appendPageToPreviousPageUses(firstPage);
+                appendPageToPreviousPageBackgroundInformation(firstPage);
             }
             edibles.push(result);
         } else {
-            appendPageToPreviousPageUses(page);
+            appendPageToPreviousPageBackgroundInformation(page);
         }
     }
 }
 
-function appendPageToPreviousPageUses(page) {
+function appendPageToPreviousPageBackgroundInformation(page) {
     const textObjectsWithoutPageNumber = page.Texts.slice(1);
     const text = fromTextObjectsToText(textObjectsWithoutPageNumber);
-    edibles[edibles.length-1].uses += ' ' + text;
+    edibles[edibles.length-1].backgroundInformation += ' ' + text;
 }
 
 console.log('\nCreating WildEdibles.csv'); 
@@ -50,7 +50,7 @@ function parsePageText(page, title, sectionTitle) {
     const pagePattern = /^([0-9]+) (.*) \((.*)\) FLOWERS: (.*) DESCRIPTION: (.*) HABITAT: (.*) LOCATION: (.*) COLLECTION: (.*) USES: ([A-Z][^[A-Z]*)( CAUTION: [\w\s)]+\w\.)? (.*)$/;
     const matchResult = correctedText.match(pagePattern);
     if (matchResult !== null) {
-        const [match, pageNumber, name, scientificName, flowers, description, habitat, location, collection, useCategories, cautionText, uses] = matchResult;
+        const [match, pageNumber, name, scientificName, flowers, description, habitat, location, collection, uses, cautionText, backgroundInformation] = matchResult;
         const caution = cautionText === undefined ? '' : cautionText.replace(' CAUTION: ', '');
         console.log(pageNumber, name);
         return {
@@ -63,9 +63,9 @@ function parsePageText(page, title, sectionTitle) {
             habitat,
             location,
             collection,
-            useCategories,
+            uses,
             caution,
-            uses
+            backgroundInformation
         };
     } else {
         console.error('No match found for page.');
