@@ -41,7 +41,6 @@ fs.writeFileSync('./WildEdibles.csv', convertArrayToCSV(edibles));
 function parsePageText(page, title, sectionTitle) {
     const pageText = fromPageToText(page);
     const correctedText = correctText(title, pageText);
-    // TODO: Add support for parsing CAUTION
     const pagePattern = /^([0-9]+) (.*) \((.*)\) FLOWERS: (.*) DESCRIPTION: (.*) HABITAT: (.*) LOCATION: (.*) COLLECTION: (.*) USES: ([A-Z][^[A-Z]*)( CAUTION: [\w\s)]+\w\.)? (.*)$/;
     const matchResult = correctedText.match(pagePattern);
     if (matchResult !== null) {
