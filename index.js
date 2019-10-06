@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { convertArrayToCSV } = require('convert-array-to-csv');
 
 const wildEdibles = JSON.parse(fs.readFileSync('WildEdibles.json'));
 const pages = wildEdibles.formImage.Pages;
@@ -6,52 +7,61 @@ const pages = wildEdibles.formImage.Pages;
 // White flowering edibles section starts on page 7
 const startPage = 7;
 let currentSection = '';
+const edibles = [];
 for (let i = startPage; i < 11; i++) {
     const page = pages[i];
     const sectionTitleTextObjects = filterSectionTitleTextObjects(page);
     if (sectionTitleTextObjects.length > 0) {
         currentSection = fromTextObjectsToText(sectionTitleTextObjects);
-        const logMessage = `SECTION: ${currentSection}`;
-        console.log(logMessage);
-        console.log(logMessage.split('').map(() => '=').join(''));
+        console.log(currentSection);
+        console.log(currentSection.split('').map(() => '=').join(''));
     } else {
         const indexOfPageTitle = findIndexOfPageTitleTextObject(page);
         if (indexOfPageTitle !== -1) {
             const pageTitleTextObject = findPageTitleTextObject(page);
             const pageTitleText = fromTextObjectToText(pageTitleTextObject);
+            let result;
             if (indexOfPageTitle === 1) {
-                parsePageText(page, pageTitleText, currentSection);
+                result = parsePageText(page, pageTitleText, currentSection);
             } else {
                 const [firstPage, secondPage] = slicePageIntoTwoPages(page, indexOfPageTitle);
-                parsePageText(secondPage, pageTitleText, currentSection);
+                result = parsePageText(secondPage, pageTitleText, currentSection);
             }
+            edibles.push(result);
         } else {
             // Append text to previous page uses
             console.log("No page title found. Appending results to previous page's USES.")
         }
     }
-    console.log(''); // print newline
 }
+
+console.log('Creating WildEdibles.csv'); 
+fs.writeFileSync('./WildEdibles.csv', convertArrayToCSV(edibles));
 
 function parsePageText(page, title, sectionTitle) {
     const pageText = fromPageToText(page);
     const correctedText = correctText(title, pageText);
     // TODO: Add support for parsing CAUTION
-    const pagePattern = /^([0-9]+) (.*) \((.*)\) FLOWERS: (.*) DESCRIPTION: (.*) HABITAT: (.*) LOCATION: (.*) COLLECTION: (.*) USES: ([A-Z][^[A-Z]*) (.*)$/;
+    const pagePattern = /^([0-9]+) (.*) \((.*)\) FLOWERS: (.*) DESCRIPTION: (.*) HABITAT: (.*) LOCATION: (.*) COLLECTION: (.*) USES: ([A-Z][^[A-Z]*)( CAUTION: [\w\s)]+\w\.)? (.*)$/;
     const matchResult = correctedText.match(pagePattern);
     if (matchResult !== null) {
-        const [match, pageNumber, name, scientificName, flowers, description, habitat, location, collection, useCategories, uses] = matchResult;
-        console.log('Page Number: ', pageNumber);
-        console.log('Name: ', name);
-        console.log('Scientific Name: ', scientificName);
-        console.log('Flowers: ', flowers);
-        console.log('Section: ', sectionTitle);
-        console.log('Description: ', description);
-        console.log('Habitat: ', habitat)
-        console.log('Location: ', location);
-        console.log('Collection: ', collection);
-        console.log('Use Categories: ', useCategories);
-        console.log('Uses: ', uses);
+        const [match, pageNumber, name, scientificName, flowers, description, habitat, location, collection, useCategories, cautionText, uses] = matchResult;
+        const caution = cautionText === undefined ? '' : cautionText.replace(' CAUTION: ', '');
+        console.log(pageNumber, name);
+        return {
+            pageNumber,
+            name,
+            scientificName,
+            flowers,
+            sectionTitle,
+            description,
+            habitat,
+            location,
+            collection,
+            useCategories,
+            caution,
+            uses
+        };
     } else {
         console.error('No match found for page.');
     }
