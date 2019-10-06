@@ -8,7 +8,7 @@ const pages = wildEdibles.formImage.Pages;
 const startPage = 7;
 let currentSection = '';
 const edibles = [];
-for (let i = startPage; i < 11; i++) {
+for (let i = startPage; i < 20; i++) {
     const page = pages[i];
     const sectionTitleTextObjects = filterSectionTitleTextObjects(page);
     if (sectionTitleTextObjects.length > 0) {
@@ -26,16 +26,22 @@ for (let i = startPage; i < 11; i++) {
             } else {
                 const [firstPage, secondPage] = slicePageIntoTwoPages(page, indexOfPageTitle);
                 result = parsePageText(secondPage, pageTitleText, currentSection);
+                appendPageToPreviousPageUses(firstPage);
             }
             edibles.push(result);
         } else {
-            // Append text to previous page uses
-            console.log("No page title found. Appending results to previous page's USES.")
+            appendPageToPreviousPageUses(page);
         }
     }
 }
 
-console.log('Creating WildEdibles.csv'); 
+function appendPageToPreviousPageUses(page) {
+    const textObjectsWithoutPageNumber = page.Texts.slice(1);
+    const text = fromTextObjectsToText(textObjectsWithoutPageNumber);
+    edibles[edibles.length-1].uses += ' ' + text;
+}
+
+console.log('\nCreating WildEdibles.csv'); 
 fs.writeFileSync('./WildEdibles.csv', convertArrayToCSV(edibles));
 
 function parsePageText(page, title, sectionTitle) {
