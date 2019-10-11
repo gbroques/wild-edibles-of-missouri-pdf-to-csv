@@ -8,7 +8,7 @@ const pages = wildEdibles.formImage.Pages;
 const startPage = 7;
 let currentSection = '';
 const edibles = [];
-for (let i = startPage; i < 60; i++) {
+for (let i = startPage; i < 70; i++) {
     const page = pages[i];
     const sectionTitleTextObjects = filterSectionTitleTextObjects(page);
     if (sectionTitleTextObjects.length > 0) {
@@ -49,11 +49,10 @@ fs.writeFileSync('./WildEdibles.csv', convertArrayToCSV(edibles));
 function parsePageText(page, title, sectionTitle) {
     const pageText = fromPageToText(page);
     const correctedText = correctText(title, pageText);
-    const pagePattern = /^([0-9]+) (.*) \((.*)\) FLOWERS: (.*) DESCRIPTION: (.*) HABITAT: (.*) LOCATION: (.*) COLLECTION: (.*) USES: ([A-Z][^[A-Z]*)( CAUTION: (See page [0-9]{3}|[\w\s]+\w\.))? (.*)$/;
+    const pagePattern = /^([0-9]+) (.*) \((.*)\) FLOWERS: (.*) DESCRIPTION: (.*) HABITAT: (.*) LOCATION: (.*) COLLECTION: (.*) USES: ([A-Z][^[A-Z]*)( CAUTION: (See page [0-9]{3}|[\w\.?\s]+\w\.))? (.*)$/;
     const matchResult = correctedText.match(pagePattern);
     if (matchResult === null) {
         const pageNumber = correctedText.split(' ')[0];
-        if (title === '') console.log(pageText); // for debugging specific pages
         console.error(`${pageNumber} No match found for ${title}.`);
         return null;
     }
@@ -124,30 +123,39 @@ function isTextObjectEqualToStyles(textObject, textObjectStyles) {
 }
 
 function correctText(title, text) {
+    const textWithPageNumberCorrect = fixPageNumber(text);
     switch (title) {
         case 'Chickweed':
-            return text.replace('US ES', 'USES');
-        case 'Smartweed':
-            return text.replace('2 05', '205'); // See page 205
-        case 'Shepherd’s Purse':
-            return text.replace('Located', 'LOCATION');
+            return textWithPageNumberCorrect.replace('US ES', 'USES');
+        case 'Shepherd’s Purse': // Located: instead of LOCATION:
+            return textWithPageNumberCorrect.replace('Located', 'LOCATION');
         case 'Bitter Cress':
             // Bitter Cress doesn't have all fields like FLOWERS, DESCRIPTION, HABITAT, etc.
             // So we choose to ignore it
-            return text.replace('Bitter Cress (Cardamine pennsylvanica, C. parvi flora) ', '');
+            return textWithPageNumberCorrect.replace('Bitter Cress (Cardamine pennsylvanica, C. parvi flora) ', '');
         case 'Ho': // Honewort
-            return text.replace('Ho newort', 'Honewort').replace('Descriptions', 'DESCRIPTION');
-        case 'Queen Anne’s Lace':
-            return text.replace('2 12', '212') // See page 212
+            return textWithPageNumberCorrect.replace('Ho newort', 'Honewort').replace('Descriptions', 'DESCRIPTION');
         case 'Persimmons': // No COLLECTION field listed for Persimmons
-            return text.replace('USES', 'COLLECTION:  USES')
-        case 'Black Haw Berries':
-            return text.replace('field nibble', 'Field Nibble'); // First use needs to be capitalized
-        case 'Pussy Toes':
-            return text.replace('LOCATION', 'HABITAT:  LOCATION').replace('gum', 'Gum');
-        case 'Bellwort':
-            return text.replace('Located', 'LOCATION').replace('roots Bellwort', 'roots USES: Bellwort');
+            return textWithPageNumberCorrect.replace('USES', 'COLLECTION:  USES')
+        case 'Black Haw Berries': // First letter of Uses not capitalized
+            return textWithPageNumberCorrect.replace('field nibble', 'Field Nibble'); // First use needs to be capitalized
+        case 'Pussy Toes': // No HABITAT field listed for Pussy Toes
+            return textWithPageNumberCorrect.replace('LOCATION', 'HABITAT:  LOCATION').replace('gum', 'Gum');
+        case 'Bellwort': // Located: instead of LOCATION: and no USES field listed for Bellwort
+            return textWithPageNumberCorrect.replace('Located', 'LOCATION').replace('roots Bellwort', 'roots USES: Bellwort');
         default:
-            return text;
+            return textWithPageNumberCorrect;
     }
+}
+
+function fixPageNumber(text) {
+    const match = text.match(/See page ([0-9] ?[0-9] ?[0-9])/);
+    if (match === null) {
+        return text;
+    }
+    const seePageNumberText = match[0];
+    const pageNumber = match[1];
+    const pageNumberWithoutSpaces =  pageNumber.replace(' ', '');
+    const correctedSeePageNumberText = seePageNumberText.replace(pageNumber, pageNumberWithoutSpaces);
+    return text.replace(seePageNumberText, correctedSeePageNumberText);
 }
