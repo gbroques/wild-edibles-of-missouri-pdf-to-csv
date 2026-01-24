@@ -10,7 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "convert-array-to-csv": "^1.0.9",
-    "pdf2json": "1.1.8"
+    "pdf2json": "4.0.2"
   },
   "devDependencies": {}
 }
